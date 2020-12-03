@@ -16,13 +16,20 @@ func main() {
 }
 
 func part1(input []string) int {
+	return traverse(input, 1, 3)
+}
+
+func traverse(input []string, down, right int) int {
 	col, count := 0, 0
-	for _, row := range input {
+	for idx, row := range input {
+		if idx%down != 0 {
+			continue
+		}
 		switch row[col] {
 		case '#':
 			count++
 		}
-		col = (col + 3) % len(row)
+		col = (col + right) % len(row)
 	}
 
 	return count
