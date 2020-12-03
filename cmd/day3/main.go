@@ -13,10 +13,29 @@ func main() {
 	}
 
 	fmt.Printf("Part 1: %d\n", part1(input))
+	fmt.Printf("Part 2: %d\n", part2(input))
 }
 
 func part1(input []string) int {
 	return traverse(input, 1, 3)
+}
+
+func part2(input []string) int {
+	result := 1
+
+	slopes := [][]int{
+		[]int{1, 1},
+		[]int{1, 3},
+		[]int{1, 5},
+		[]int{1, 7},
+		[]int{2, 1},
+	}
+
+	for _, slope := range slopes {
+		result = result * traverse(input, slope[0], slope[1])
+	}
+
+	return result
 }
 
 func traverse(input []string, down, right int) int {
