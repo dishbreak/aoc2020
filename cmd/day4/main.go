@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -58,6 +59,54 @@ func (p *Passport) NoMissingFields() bool {
 	return p.missingFields == 0
 }
 
+func (p *Passport) IsValid() bool {
+	if !p.NoMissingFields() {
+		return false
+	}
+
+	if p.BirthYear < 1920 || p.BirthYear > 2002 {
+		return false
+	}
+
+	if p.IssueYear < 2010 || p.IssueYear > 2020 {
+		return false
+	}
+
+	if p.ExpirationYear < 2020 || p.ExpirationYear > 2030 {
+		return false
+	}
+
+	switch {
+	case strings.HasSuffix(p.Height, "in"):
+		if inches, _ := strconv.Atoi(strings.TrimSuffix(p.Height, "in")); inches < 59 || inches > 76 {
+			return false
+		}
+	case strings.HasSuffix(p.Height, "cm"):
+		if cms, _ := strconv.Atoi(strings.TrimSuffix(p.Height, "cm")); cms < 150 || cms > 193 {
+			return false
+		}
+	default:
+		return false
+	}
+
+	validColor := regexp.MustCompile("^(amb|blu|brn|gry|grn|hzl|oth)$")
+	if !validColor.MatchString(p.EyeColor) {
+		return false
+	}
+
+	validHex := regexp.MustCompile("^#[a-f|0-9]{6}$")
+	if !validHex.MatchString(p.HairColor) {
+		return false
+	}
+
+	validPid := regexp.MustCompile("^[0-9]{9}$")
+	if !validPid.MatchString(p.PassportID) {
+		return false
+	}
+
+	return true
+}
+
 func main() {
 	input, err := getInput()
 	if err != nil {
@@ -65,12 +114,23 @@ func main() {
 	}
 
 	fmt.Printf("Part 1: %d\n", part1(input))
+	fmt.Printf("Part 2: %d\n", part2(input))
 }
 
 func part1(input []*Passport) int {
 	count := 0
 	for _, passport := range input {
 		if passport.NoMissingFields() {
+			count++
+		}
+	}
+	return count
+}
+
+func part2(input []*Passport) int {
+	count := 0
+	for _, passport := range input {
+		if passport.IsValid() {
 			count++
 		}
 	}
