@@ -1,25 +1,19 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"sort"
 )
 
-type BoardingPass struct {
-	Row int
-	Col int
-}
+func SeatIDFromPass(pass string) int {
+	rowSymbols := string(pass[:7])
+	colSymbols := string(pass[7:len(pass)])
+	row := binarySearch(rowSymbols, 'F', 'B', 0, 127)
+	col := binarySearch(colSymbols, 'L', 'R', 0, 7)
 
-func NewBoardingPass(input string) BoardingPass {
-	rowSymbols := string(input[:7])
-	colSymbols := string(input[7:len(input)])
-	return BoardingPass{
-		Row: binarySearch(rowSymbols, 'F', 'B', 0, 127),
-		Col: binarySearch(colSymbols, 'L', 'R', 0, 7),
-	}
-}
-
-func (b BoardingPass) GetID() int {
-	return (b.Row * 8) + b.Col
+	return (row * 8) + col
 }
 
 func binarySearch(input string, low, high rune, min, max int) int {
@@ -35,17 +29,64 @@ func binarySearch(input string, low, high rune, min, max int) int {
 }
 
 func main() {
-	pass := "BFFFFFB"
-	min, max := 0, 127
-	for _, x := range pass {
-		switch x {
-		case 'B':
-			min = (min+max)/2 + 1
-		case 'F':
-			max = (min + max) / 2
+	input, err := getInput()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Part 1: %d\n", part1(input))
+	fmt.Printf("Part 2: %d\n", part2(input))
+}
+
+func part1(input []string) int {
+	highestPassID := SeatIDFromPass(input[0])
+
+	for idx, val := range input {
+		if idx == 0 {
+			continue
+		}
+
+		newPassID := SeatIDFromPass(val)
+		if newPassID > highestPassID {
+			highestPassID = newPassID
+		} else {
+			break
 		}
 	}
-	fmt.Println(min * 8)
-	fmt.Println(binarySearch(pass, 'F', 'B', 0, 127) * 8)
-	fmt.Println(NewBoardingPass("BFFFFFBRRR").GetID())
+
+	return highestPassID
+}
+
+func part2(input []string) int {
+	previousPass := input[0]
+
+	for idx, val := range input {
+		if idx == 0 {
+			continue
+		}
+
+		if previousPass[9] != val[9] {
+			previousPass = val
+		} else {
+			break
+		}
+	}
+	return SeatIDFromPass(previousPass) + 1
+}
+
+func getInput() ([]string, error) {
+	f, err := os.Open("inputs/day5.txt")
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]string, 0)
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		result = append(result, scanner.Text())
+	}
+
+	sort.Strings(result)
+	return result, nil
 }
