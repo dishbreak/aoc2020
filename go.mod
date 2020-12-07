@@ -2,5 +2,4 @@ module github.com/dishbreak/aoc2020
 
 go 1.15
 
-require ()
-
+require github.com/stretchr/testify v1.6.1
