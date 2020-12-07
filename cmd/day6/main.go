@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
+
+	"github.com/dishbreak/aoc2020/lib"
 )
 
 func main() {
-	input, err := getInput()
+	input, err := lib.GetInput("inputs/day6.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -75,21 +75,4 @@ func part2(input []string) int {
 		}
 	}
 	return result
-}
-
-func getInput() ([]string, error) {
-	f, err := os.Open("inputs/day6.txt")
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]string, 0)
-
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		result = append(result, s.Text())
-	}
-
-	result = append(result, "")
-	return result, nil
 }
