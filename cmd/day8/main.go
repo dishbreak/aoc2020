@@ -80,7 +80,15 @@ func part2(input []instruction) int {
 		}
 	}
 
+	// next, we'll re-run the code, changing a single jmp/nop instruction each
+	// time.
+	// this could take awhile; let's speed up the process using goroutines!
+
+	// first, we'll make a channel for transmitting the instruction to flip out
+	// to the goroutines.
 	flippedInstruction := make(chan int, len(candidateInstructions))
+	// next, we'll make a channel that the goroutines can use to send their
+	// exeuction results back to the main thread.
 	result := make(chan executionResult, len(candidateInstructions))
 
 	var wg sync.WaitGroup
@@ -90,13 +98,19 @@ func part2(input []instruction) int {
 		go func(flippedInstruction <-chan int, result chan<- executionResult) {
 			defer wg.Done()
 			for j := range flippedInstruction {
+				// re-execute the program.
+				// note that this time the program counter is declared outside
+				// the for loop because we need it to check if the program exited.
 				accumulator := 0
 				visited := make([]bool, len(input))
-				fmt.Printf("running with flipped instruction %d\n", j)
 				k := 0
+
 				for k < len(input) && !visited[k] {
 					visited[k] = true
 					command := input[k].Command
+
+					// flip the command if the program counter matches the input
+					// we got.
 					if k == j {
 						switch command {
 						case "jmp":
@@ -106,6 +120,7 @@ func part2(input []instruction) int {
 						}
 					}
 
+					// execute the command as normal.
 					switch command {
 					case "nop":
 						k++
@@ -116,13 +131,12 @@ func part2(input []instruction) int {
 						k += input[k].Argument
 					}
 				}
+				// record the result
 				runResult := executionResult{
 					Exited:      k == len(input),
 					Accumulator: accumulator,
 				}
-				fmt.Printf("Flipping %d gives %+v\n", j, runResult)
 				result <- runResult
-
 			}
 		}(flippedInstruction, result)
 	}
@@ -131,6 +145,7 @@ func part2(input []instruction) int {
 	for _, inst := range candidateInstructions {
 		flippedInstruction <- inst
 	}
+	// important! we need to close the channel so workers know to exit.
 	close(flippedInstruction)
 
 	accumulator := 0
@@ -142,6 +157,7 @@ func part2(input []instruction) int {
 		}
 	}
 
+	// make sure everything is done before returning.
 	wg.Wait()
 	return accumulator
 }
