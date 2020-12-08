@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/dishbreak/aoc2020/lib"
 )
@@ -13,9 +14,11 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Part 1: %d\n", part1(input))
+	fmt.Printf("Part 2: %d\n", part2(input))
 }
 
-//^([\w\s]+) bags contain (.*)$
+var rulesMatcher *regexp.Regexp = regexp.MustCompile(`^([\w\s]+) bags contain (.*)$`)
+var innerBagMatcher *regexp.Regexp = regexp.MustCompile(`(\d+) ([\w\s]+) bag`)
 
 func part1(input []string) int {
 	// We're going to construct a list of edges from the rule set and do a
@@ -32,9 +35,6 @@ func part1(input []string) int {
 
 	validOuterBags := make(map[string][]string)
 
-	rulesMatcher := regexp.MustCompile(`^([\w\s]+) bags contain (.*)$`)
-	innerBagMatcher := regexp.MustCompile(`\d+ ([\w\s]+) bag`)
-
 	// REMEMBER for regexp, FindAllStringSubmatch will give you a slice of
 	// slices.
 	// For each slice, the first entry will be the full matched text, and the
@@ -50,10 +50,10 @@ func part1(input []string) int {
 		// One pass will extract each inner bag.
 		innerBagResults := innerBagMatcher.FindAllStringSubmatch(results[0][2], -1)
 		for _, innerBagResult := range innerBagResults {
-			if validOuterBags[innerBagResult[1]] == nil {
-				validOuterBags[innerBagResult[1]] = make([]string, 0)
+			if validOuterBags[innerBagResult[2]] == nil {
+				validOuterBags[innerBagResult[2]] = make([]string, 0)
 			}
-			validOuterBags[innerBagResult[1]] = append(validOuterBags[innerBagResult[1]], outerBag)
+			validOuterBags[innerBagResult[2]] = append(validOuterBags[innerBagResult[2]], outerBag)
 		}
 	}
 
@@ -78,7 +78,7 @@ func part1(input []string) int {
 		nextColors, ok := validOuterBags[color]
 		if !ok {
 			// if no bag color can contain our bag, we've reached a leaf of the
-			// graph.
+			// tree.
 			// We can get another color from the stack.
 			continue
 		}
@@ -91,10 +91,69 @@ func part1(input []string) int {
 	}
 
 	// funny little thing. because we started our search with "shiny gold", it
-	// technically counts as a valid outer bag. However, shiny gold bags can't
-	// contain shiny gold bags, so we can remove "shiny gold" from the list.
+	// ended up in our set. assuming the graph has no cycles, a shiny gold bag
+	// can't contain a shiny gold bag. so we can remove it.
 	delete(possibleOuterBags, "shiny gold")
 
 	// the size of our "set" is now the answer to part 1!
 	return len(possibleOuterBags)
+}
+
+type innerBag struct {
+	Count int
+	Color string
+}
+
+func part2(input []string) int {
+	// with part 2, we're going to use recursion to solve the problem.
+	// we're going to define a function and recursively call it.
+	// unlike part 1, we're not going to reverse the rules.
+	innerBags := make(map[string][]innerBag)
+
+	for _, rule := range input {
+		matchingRule := rulesMatcher.FindAllStringSubmatch(rule, -1)
+		if len(matchingRule) == 0 {
+			continue
+		}
+
+		outerBag := matchingRule[0][1]
+
+		innerBagMatches := innerBagMatcher.FindAllStringSubmatch(matchingRule[0][2], -1)
+		for _, innerBagMatch := range innerBagMatches {
+			if innerBags[outerBag] == nil {
+				innerBags[outerBag] = make([]innerBag, 0)
+			}
+
+			count, _ := strconv.Atoi(innerBagMatch[1])
+			innerBags[outerBag] = append(innerBags[outerBag], innerBag{
+				Count: count,
+				Color: innerBagMatch[2],
+			})
+		}
+	}
+
+	// By definition, CountBagsWithin includes the containing bag in
+	return CountBagsWithin("shiny gold", innerBags) - 1
+}
+
+// CountBagsWithin will recursively tabulate all the bags within a compliant
+// bag, inclusive of the containing bag.
+func CountBagsWithin(color string, innerBags map[string][]innerBag) int {
+	// we always want to count the containing bag.
+	result := 1
+
+	// if we can't find any rules for this bag, there can be no other bags in
+	// this bag. bail out.
+	nextColors, ok := innerBags[color]
+	if !ok {
+		return result
+	}
+
+	// recursively call this function for each of the inner bags, multipliying
+	// the result by its count.
+	for _, nextColor := range nextColors {
+		result += nextColor.Count * CountBagsWithin(nextColor.Color, innerBags)
+	}
+
+	return result
 }
