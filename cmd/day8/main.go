@@ -91,7 +91,7 @@ func part2(input []instruction) int {
 	// time.
 	// this could take awhile; let's speed up the process using goroutines!
 
-	// first, we'll make a channel for transmitting the instruction to flip out
+	// first, we'll make a channel for transmitting the instruction to correct
 	// to the goroutines.
 	flippedInstruction := make(chan executionSnapshot, len(candidateInstructions))
 	// next, we'll make a channel that the goroutines can use to send their
