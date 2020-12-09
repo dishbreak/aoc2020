@@ -17,6 +17,12 @@ func main() {
 }
 
 func part1(input []int) int {
+	result, _ := findWeakness(input)
+
+	return result
+}
+
+func findWeakness(input []int) (int, int) {
 	var preceding [25]int
 
 	for i := 0; i < 25; i++ {
@@ -44,12 +50,12 @@ func part1(input []int) int {
 		}
 
 		if !matchFound {
-			return input[i]
+			return input[i], i
 		}
 		preceding[i%25] = input[i]
 	}
 
-	return -1
+	return -1, -1
 }
 
 func getInput() ([]int, error) {
