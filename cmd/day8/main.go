@@ -51,14 +51,20 @@ type executionResult struct {
 	Accumulator int
 }
 
+type executionSnapshot struct {
+	ProgramCounter int
+	Accumulator    int
+}
+
 func part2(input []instruction) int {
 	// we're going to brute-force this problem.
 
 	// first, we'll execute the code once, capturing all the instructions that
 	// got hit. if we need only change one instruction to get the program to
 	// pass, it will be one of the instructions executed in the loop.
-	candidateInstructions := make([]int, 0)
+	candidateInstructions := make([]executionSnapshot, 0)
 	visited := make([]bool, len(input))
+	accumulator := 0
 	for i := 0; i <= len(input) && !visited[i]; {
 		// We'll mark this instruction as visited, so that our for loop exits if
 		// we hit this instruction again.
@@ -68,14 +74,15 @@ func part2(input []instruction) int {
 		switch input[i].Command {
 		case "nop":
 			// nop just moves the program counter
-			candidateInstructions = append(candidateInstructions, i)
+			candidateInstructions = append(candidateInstructions, executionSnapshot{ProgramCounter: i, Accumulator: accumulator})
 			i++
 		case "acc":
 			// acc will add to the accumulator and move the program counter
+			accumulator += input[i].Argument
 			i++
 		case "jmp":
 			// jmp will modify the program counter
-			candidateInstructions = append(candidateInstructions, i)
+			candidateInstructions = append(candidateInstructions, executionSnapshot{ProgramCounter: i, Accumulator: accumulator})
 			i += input[i].Argument
 		}
 	}
@@ -86,7 +93,7 @@ func part2(input []instruction) int {
 
 	// first, we'll make a channel for transmitting the instruction to flip out
 	// to the goroutines.
-	flippedInstruction := make(chan int, len(candidateInstructions))
+	flippedInstruction := make(chan executionSnapshot, len(candidateInstructions))
 	// next, we'll make a channel that the goroutines can use to send their
 	// exeuction results back to the main thread.
 	result := make(chan executionResult, len(candidateInstructions))
@@ -95,15 +102,15 @@ func part2(input []instruction) int {
 	// start 10 workers to run exectuions of the code.
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		go func(flippedInstruction <-chan int, result chan<- executionResult) {
+		go func(flippedInstruction <-chan executionSnapshot, result chan<- executionResult) {
 			defer wg.Done()
 			for j := range flippedInstruction {
 				// re-execute the program.
 				// note that this time the program counter is declared outside
 				// the for loop because we need it to check if the program exited.
-				accumulator := 0
+				accumulator := j.Accumulator
 				visited := make([]bool, len(input))
-				k := 0
+				k := j.ProgramCounter
 
 				for k < len(input) && !visited[k] {
 					visited[k] = true
@@ -111,7 +118,7 @@ func part2(input []instruction) int {
 
 					// flip the command if the program counter matches the input
 					// we got.
-					if k == j {
+					if k == j.ProgramCounter {
 						switch command {
 						case "jmp":
 							command = "nop"
@@ -148,7 +155,7 @@ func part2(input []instruction) int {
 	// important! we need to close the channel so workers know to exit.
 	close(flippedInstruction)
 
-	accumulator := 0
+	accumulator = 0
 	// collect results
 	for i := 0; i < len(candidateInstructions); i++ {
 		s := <-result
