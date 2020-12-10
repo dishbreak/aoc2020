@@ -57,7 +57,7 @@ func part2(input []int) int {
 	// in our adapter array.
 	// this state vector will represent the number of valid chains that can end
 	// with a jolt rating equal to the index
-	state := make([]int, input[len(input)-1]+1)
+	state := make([]int, input[len(input)])
 
 	// next, we'll loop through out input.
 	for _, joltValue := range input {
