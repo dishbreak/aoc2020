@@ -16,11 +16,6 @@ func main() {
 	fmt.Printf("Part 1: %d\n", part1(input))
 }
 
-type Space struct {
-	Floor bool
-	State int
-}
-
 // adapted from https://golang.org/doc/play/life.go
 type Field struct {
 	s          [][]bool
@@ -111,6 +106,7 @@ func (g *Game) Increment() bool {
 			} else {
 				g.b.s[i][j] = g.a.s[i][j]
 			}
+
 		}
 	}
 
