@@ -82,33 +82,29 @@ func NewGame(input []string) *Game {
 		rows:  rows,
 		cols:  cols,
 		a:     NewField(rows, cols),
-		b:     NewField(rows, cols),
 		floor: floor,
 	}
 }
 
 func (g *Game) Increment() bool {
 	changed := false
+	buffer := NewField(g.rows, g.cols)
 	for i, row := range g.a.s {
 		for j := range row {
-			if g.floor.s[i][j] == 1 {
-				continue
-			}
 			neighbors := g.a.FilledNeighbors(i, j)
 			if g.a.s[i][j] == 1 && neighbors >= 4 {
-				g.b.s[i][j] = 0
+				buffer.s[i][j] = 0
 				changed = true
 			} else if g.a.s[i][j] == 0 && neighbors == 0 {
-				g.b.s[i][j] = 1
+				buffer.s[i][j] = 1
 				changed = true
 			} else {
-				g.b.s[i][j] = g.a.s[i][j]
+				buffer.s[i][j] = g.a.s[i][j]
 			}
-
 		}
 	}
 
-	g.a, g.b = g.b, g.a
+	g.a = buffer
 	return changed
 }
 
@@ -144,8 +140,9 @@ func part1(input []string) int {
 	game := NewGame(input)
 
 	for i := 0; game.Increment(); i++ {
-		// fmt.Printf("+++ Round %d +++\n", i)
-		// fmt.Println(game)
+		fmt.Printf("+++ Round %d +++\n", i)
+		fmt.Println(game)
+		fmt.Println("Round", i, ":", game.OccupiedSeats())
 	}
 
 	return game.OccupiedSeats()
