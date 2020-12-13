@@ -15,14 +15,16 @@ func main() {
 	}
 
 	fmt.Printf("Part 1: %d\n", part1(input))
+	fmt.Printf("Part 2: %d\n", part2(input))
 }
 
 type Game struct {
 	Board      map[image.Point]string
 	rows, cols int
+	callback   func(*Game, image.Point, string) (string, bool)
 }
 
-func NewGame(input []string) *Game {
+func NewGame(input []string, callback func(*Game, image.Point, string) (string, bool)) *Game {
 	board := make(map[image.Point]string)
 
 	for i, row := range input {
@@ -32,49 +34,58 @@ func NewGame(input []string) *Game {
 	}
 
 	return &Game{
-		Board: board,
-		rows:  len(input),
-		cols:  len(input[0]),
+		Board:    board,
+		rows:     len(input),
+		cols:     len(input[0]),
+		callback: callback,
 	}
 }
 
-func neighbor8(p image.Point) []image.Point {
-	return []image.Point{
-		image.Point{p.X - 1, p.Y - 1},
-		image.Point{p.X - 1, p.Y},
-		image.Point{p.X - 1, p.Y + 1},
-		image.Point{p.X, p.Y - 1},
-		image.Point{p.X, p.Y + 1},
-		image.Point{p.X + 1, p.Y - 1},
-		image.Point{p.X + 1, p.Y},
-		image.Point{p.X + 1, p.Y + 1},
-	}
+var neighbor8 = []image.Point{
+	image.Point{-1, -1},
+	image.Point{-1, 0},
+	image.Point{-1, 1},
+	image.Point{0, -1},
+	image.Point{0, 1},
+	image.Point{1, -1},
+	image.Point{1, 0},
+	image.Point{1, 1},
 }
 
 func (g *Game) adjacentOccupied(p image.Point) int {
 	occupied := 0
-	for _, neighbor := range neighbor8(p) {
-		if s, ok := g.Board[neighbor]; ok && s == "#" {
+	for _, neighbor := range neighbor8 {
+		if s, ok := g.Board[p.Add(neighbor)]; ok && s == "#" {
 			occupied++
 		}
 	}
 	return occupied
 }
 
+func (g *Game) seenOccupied(p image.Point) int {
+	seen := 0
+	for _, neighbor := range neighbor8 {
+		j := p.Add(neighbor)
+		for s, ok := g.Board[j]; ok; s, ok = g.Board[j] {
+			if s == "#" {
+				seen++
+				break
+			} else if s == "L" {
+				break
+			}
+			j = j.Add(neighbor)
+		}
+	}
+	return seen
+}
+
 func (g *Game) Increment() bool {
 	changed := false
 	board := make(map[image.Point]string)
 	for k, v := range g.Board {
-		neighbors := g.adjacentOccupied(k)
-		if v == "L" && neighbors == 0 {
-			board[k] = "#"
-			changed = true
-		} else if v == "#" && neighbors > 3 {
-			board[k] = "L"
-			changed = true
-		} else {
-			board[k] = v
-		}
+		result, updated := g.callback(g, k, v)
+		changed = changed || updated
+		board[k] = result
 	}
 
 	g.Board = board
@@ -103,12 +114,40 @@ func (g *Game) String() string {
 }
 
 func part1(input []string) int {
-	g := NewGame(input)
-
-	for i := 0; g.Increment(); i++ {
-		// fmt.Printf("--- Round %d\n", i)
-		// fmt.Println(g)
-		// fmt.Printf("Occupied: %d\n", g.OccupiedSeats())
+	f := func(g *Game, p image.Point, s string) (string, bool) {
+		neighbors := g.adjacentOccupied(p)
+		if s == "L" && neighbors == 0 {
+			return "#", true
+		} else if s == "#" && neighbors > 3 {
+			return "L", true
+		} else {
+			return s, false
+		}
 	}
+
+	g := NewGame(input, f)
+
+	for g.Increment() {
+	}
+
+	return g.OccupiedSeats()
+}
+
+func part2(input []string) int {
+	f := func(g *Game, p image.Point, s string) (string, bool) {
+		neighbors := g.seenOccupied(p)
+		if s == "L" && neighbors == 0 {
+			return "#", true
+		} else if s == "#" && neighbors > 4 {
+			return "L", true
+		} else {
+			return s, false
+		}
+	}
+
+	g := NewGame(input, f)
+	for g.Increment() {
+	}
+
 	return g.OccupiedSeats()
 }
