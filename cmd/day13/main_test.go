@@ -17,8 +17,20 @@ func TestNewBusCalculator(t *testing.T) {
 	assert.Equal(t, &BusCalculator{
 		startTime: 939,
 		busIds:    []int{7, 13, 59, 31, 19},
-		maxId:     59,
+		maxID:     59,
 	}, calc)
+}
+
+func TestLoadSchedule(t *testing.T) {
+	expected := []BusScheduleEntry{
+		BusScheduleEntry{59, 4},
+		BusScheduleEntry{31, 6},
+		BusScheduleEntry{19, 7},
+		BusScheduleEntry{13, 1},
+		BusScheduleEntry{7, 0},
+	}
+	actual := LoadSchedule(input[1])
+	assert.Equal(t, expected, actual)
 }
 
 func TestPart1(t *testing.T) {
@@ -26,5 +38,5 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	assert.Equal(t, 0, part2(input))
+	assert.Equal(t, 1068781, part2(input))
 }
