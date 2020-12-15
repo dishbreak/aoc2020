@@ -18,11 +18,17 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	assert.Equal(t, 0, part2(input))
+	program := []string{
+		"mask = 000000000000000000000000000000X1001X",
+		"mem[42] = 100",
+		"mask = 00000000000000000000000000000000X0XX",
+		"mem[26] = 1",
+	}
+	assert.Equal(t, int64(208), part2(program))
 }
 
 func TestMaskV1(t *testing.T) {
-	mask := NewMask("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X")
+	mask := NewMaskV1("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X")
 	mem := make(map[int64]int64)
 
 	mask.WriteTo(mem, 8, 11)
