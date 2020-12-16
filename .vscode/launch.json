@@ -33,6 +33,16 @@
             "env": {},
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Day 16",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/cmd/day16/main.go",
+            "env": {},
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
