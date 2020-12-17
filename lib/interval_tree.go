@@ -89,7 +89,21 @@ func (i *IntervalTreeNode) Find(query int) []*Range {
 }
 
 func (i *IntervalTreeNode) findInNode(query int, matches []*Range) []*Range {
-	if query <= i.CenterPoint {
+	if query == i.CenterPoint {
+		for _, interval := range i.CenterIntervalsByMin {
+			matches = append(matches, interval)
+		}
+
+		if i.Left != nil {
+			matches = i.Left.findInNode(query, matches)
+		}
+		if i.Right != nil {
+			matches = i.Right.findInNode(query, matches)
+		}
+		return matches
+	}
+
+	if query < i.CenterPoint {
 		for _, interval := range i.CenterIntervalsByMin {
 			if interval.Min > query {
 				break
@@ -102,7 +116,7 @@ func (i *IntervalTreeNode) findInNode(query int, matches []*Range) []*Range {
 		}
 	}
 
-	if query >= i.CenterPoint {
+	if query > i.CenterPoint {
 		for _, interval := range i.CenterIntervalsByMax {
 			if interval.Max < query {
 				break
