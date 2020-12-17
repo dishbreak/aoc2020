@@ -5,20 +5,27 @@ import (
 	"sort"
 )
 
+// Range encapsulates the min and max values for an interval and allows the user
+// to specify some sort of metadata.
 type Range struct {
 	Min      int
 	Max      int
 	Metadata interface{}
 }
 
+// Contains will establish that the given query falls in the bounds of the
+// Range, inclusive of min/max.
 func (r *Range) Contains(query int) bool {
 	return query >= r.Min && query <= r.Max
 }
 
+// Valid will return true when the range Min val is strictly less than the range
+// Max val.
 func (r *Range) Valid() bool {
 	return r.Min < r.Max
 }
 
+// IntervalTreeNode stores a set of intervals in a binary tree for simplified retrieval.
 type IntervalTreeNode struct {
 	CenterPoint          int
 	CenterIntervalsByMin []*Range
@@ -27,6 +34,8 @@ type IntervalTreeNode struct {
 	Right                *IntervalTreeNode
 }
 
+// NewIntervalTree returns the root of an interval tree containing all
+// specified intervals, provided all intervals are valid.
 func NewIntervalTree(input []*Range) (*IntervalTreeNode, error) {
 	for _, interval := range input {
 		if !interval.Valid() {
@@ -83,6 +92,7 @@ func newIntervalTreeNode(input []*Range) *IntervalTreeNode {
 	}
 }
 
+// Find returns a slice of intervals containing the given point, inclusive of bounds.
 func (i *IntervalTreeNode) Find(query int) []*Range {
 	matches := make([]*Range, 0)
 	return i.findInNode(query, matches)

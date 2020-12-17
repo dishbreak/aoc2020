@@ -96,37 +96,42 @@ func part1(input []string) int {
 func populateTicketFields(myTicket []int, validTickets [][]int, tree *lib.IntervalTreeNode) map[string]int {
 	myPopulatedTicket := make(map[string]int, len(myTicket))
 
+	// for each position, we're going to keep track of how many fields match the
+	// value in that position, using our interval tree.
 	fieldsVector := make([]map[string]int, len(myTicket))
 	for idx := range fieldsVector {
 		fieldsVector[idx] = make(map[string]int)
 	}
 
+	// loop through all the valid tickets.
 	for _, ticket := range validTickets {
+		// for each value, find the matching intervals and increment the counter
+		// for the given field name
 		for idx, fieldVal := range ticket {
 			matchingIntervals := tree.Find(fieldVal)
-			fieldHits := make(map[string]int, len(myTicket))
 			for j := range matchingIntervals {
 				if fieldName, ok := matchingIntervals[j].Metadata.(string); ok {
 					fieldsVector[idx][fieldName]++
-					fieldHits[fieldName]++
-				}
-			}
-
-			for k, v := range fieldHits {
-				if v > 1 {
-					panic(fmt.Errorf("%d matched '%s' %d times", fieldVal, k, v))
 				}
 			}
 		}
 	}
 
-	// we're going to play multiple rounds of the following
+	// we're going to play multiple rounds of the following game:
+	// 1. for each position, see if only 1 field matches all values in that
+	// position.
+	// 2. If we find a winner, write the value from that position on our ticket
+	// into the map, using the field name as the key.
+	// 3. eliminate the field from all our field vectors and eliminate the
+	// position from consideration.
+
+	// We'll keep playing rounds until the map has entries for each position in
+	// the ticket.
 	for len(myPopulatedTicket) != len(myTicket) {
 		// find fields that match all values in a given position
 		for idx, state := range fieldsVector {
 			// if a state vector entry is nil it means we've locked that
 			// position to a given field.
-
 			if state == nil {
 				continue
 			}
@@ -151,6 +156,8 @@ func populateTicketFields(myTicket []int, validTickets [][]int, tree *lib.Interv
 			if state == nil {
 				continue
 			}
+			// ensure all fields that we've solved aren't present in the vector.
+			// this will let us find matches in successive rounds.
 			for k := range myPopulatedTicket {
 				delete(state, k)
 			}
