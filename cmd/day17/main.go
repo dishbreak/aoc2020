@@ -46,5 +46,29 @@ func part1(input []string) int {
 }
 
 func part2(input []string) int {
-	return 0
+	cb := func(p *pocketDimension4d, c lib.Point4D) int {
+		state := p.getCubeState(c)
+		neighborCount := 0
+		for _, neigbhor := range c.Neighbors() {
+			neighborCount += p.getCubeState(neigbhor)
+		}
+		if state == 0 {
+			if neighborCount == 3 {
+				return 1
+			}
+			return 0
+		}
+		if neighborCount == 2 || neighborCount == 3 {
+			return 1
+		}
+		return 0
+	}
+
+	p := newPocketDimension4d(input, cb)
+
+	result := 0
+	for i := 0; i < 6; i++ {
+		result = p.increment()
+	}
+	return result
 }
