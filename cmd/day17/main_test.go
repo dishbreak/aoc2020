@@ -6,10 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var input = []string{}
+var input = []string{
+	".#.",
+	"..#",
+	"###",
+}
 
 func TestPart1(t *testing.T) {
-	assert.Equal(t, 0, part1(input))
+	assert.Equal(t, 112, part1(input))
 }
 
 func TestPart2(t *testing.T) {

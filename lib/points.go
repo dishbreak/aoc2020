@@ -14,6 +14,22 @@ func (p Point3D) Add(other Point3D) Point3D {
 	}
 }
 
+// Sub will perform vector subtraction and return a new Point3D with other being
+// the right-hand operand.
+func (p Point3D) Sub(other Point3D) Point3D {
+	return Point3D{
+		X: p.X - other.X,
+		Y: p.Y - other.Y,
+		Z: p.Z - other.Z,
+	}
+}
+
+// Volume calculates the volume of a cube with a corner at p and a corner at the
+// origin (0, 0, 0).
+func Volume(p Point3D) int {
+	return p.X * p.Y * p.Z
+}
+
 // Neighbors returns the 26 coordinates surrounding the given point.
 func (p Point3D) Neighbors() []Point3D {
 	result := make([]Point3D, 26)
