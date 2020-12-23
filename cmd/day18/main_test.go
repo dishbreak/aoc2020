@@ -22,7 +22,3 @@ func TestPart1(t *testing.T) {
 func TestPart2(t *testing.T) {
 	assert.Equal(t, 694173, part2(input))
 }
-
-func TestEvaluatePart2(t *testing.T) {
-	assert.Equal(t, 465792, evaluateStatementV2("(5 * 5 * 9 * 6 + (2 + 9 * 5 * 6) + 9) + 7 * 6"))
-}

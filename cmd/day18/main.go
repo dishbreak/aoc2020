@@ -27,82 +27,6 @@ func mult(result, operand int) int {
 	return result * operand
 }
 
-func noop(result, operand int) int {
-	return result
-}
-
-type stackFrame struct {
-	operation   func(int, int) int
-	accumulator int
-}
-
-func evaluateStatement(statement string) int {
-	result := 0
-	operation := add
-
-	stack := list.New()
-
-	for _, field := range strings.Fields(statement) {
-		switch {
-		case field == "+":
-			operation = add
-		case field == "*":
-			operation = mult
-		case strings.HasPrefix(field, "("):
-			i := 0
-			for ; field[i] == '('; i++ {
-				stack.PushBack(stackFrame{
-					operation:   operation,
-					accumulator: result,
-				})
-				result = 0
-				operation = add
-			}
-			field = string(field[i:])
-			operand, err := strconv.Atoi(field)
-			if err != nil {
-				panic(err)
-			}
-			result = operand
-		case strings.HasSuffix(field, ")"):
-			i := len(field) - 1
-			for ; field[i] == ')'; i-- {
-			}
-			parens := len(field) - i - 1
-			field = string(field[:i+1])
-
-			operand, err := strconv.Atoi(field)
-			if err != nil {
-				panic(err)
-			}
-
-			result = operation(result, operand)
-
-			for j := 0; j < parens; j++ {
-				if stack.Len() == 0 {
-					panic(fmt.Errorf("unbalanced statement: %s", statement))
-				}
-
-				frame, ok := stack.Back().Value.(stackFrame)
-				if !ok {
-					panic(fmt.Errorf("unexpected stack value %v", stack.Back()))
-				}
-
-				result = frame.operation(frame.accumulator, result)
-				stack.Remove(stack.Back())
-			}
-		default:
-			operand, err := strconv.Atoi(field)
-			if err != nil {
-				panic(err)
-			}
-			result = operation(result, operand)
-		}
-	}
-
-	return result
-}
-
 type TokenType int
 
 const (
@@ -141,15 +65,13 @@ func (p Paren) GetType() TokenType {
 	return p.parenType
 }
 
-func tokenize(statement string) []Token {
+func tokenize(statement string, operators map[string]Operator) []Token {
 	result := make([]Token, 0)
 	for _, part := range strings.Fields(statement) {
-		switch {
-		case part == "*":
-			result = append(result, Operator{Precedence: 1, Evaluate: mult})
-		case part == "+":
-			result = append(result, Operator{Precedence: 2, Evaluate: add})
-		default:
+
+		if operator, ok := operators[part]; ok {
+			result = append(result, operator)
+		} else {
 			if strings.HasPrefix(part, "(") {
 				i := 0
 				for ; part[i] == '('; i++ {
@@ -236,12 +158,12 @@ func infixToRpn(tokens []Token) []Token {
 	return result
 }
 
-func evaluateStatementV2(statement string) int {
+func evaluateStatement(statement string, operators map[string]Operator) int {
 	if statement == "" {
 		return 0
 	}
 
-	tokens := tokenize(statement)
+	tokens := tokenize(statement, operators)
 	rpnStream := infixToRpn(tokens)
 
 	outputStack := list.New()
@@ -266,8 +188,13 @@ func evaluateStatementV2(statement string) int {
 func part1(input []string) int {
 	result := 0
 
+	operators := map[string]Operator{
+		"*": Operator{Precedence: 1, Evaluate: mult},
+		"+": Operator{Precedence: 1, Evaluate: add},
+	}
+
 	for _, statement := range input {
-		result += evaluateStatement(statement)
+		result += evaluateStatement(statement, operators)
 	}
 
 	return result
@@ -276,8 +203,13 @@ func part1(input []string) int {
 func part2(input []string) int {
 	result := 0
 
+	operators := map[string]Operator{
+		"*": Operator{Precedence: 1, Evaluate: mult},
+		"+": Operator{Precedence: 2, Evaluate: add},
+	}
+
 	for _, statement := range input {
-		result += evaluateStatementV2(statement)
+		result += evaluateStatement(statement, operators)
 	}
 
 	return result
