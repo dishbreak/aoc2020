@@ -25,7 +25,7 @@ type rule struct {
 	conditionals  [][]int
 }
 
-type ruleset []rule
+type ruleset map[int]rule
 
 // newRule will parse the string from the input file and create a rule struct.
 func newRule(statement string) rule {
@@ -82,7 +82,7 @@ func newRule(statement string) rule {
 }
 
 func newRuleset(rules []string) ruleset {
-	result := make([]rule, len(rules))
+	result := make(map[int]rule)
 	for _, ruleLine := range rules {
 		parsedRule := newRule(ruleLine)
 		result[parsedRule.number] = parsedRule
@@ -138,6 +138,26 @@ func (r ruleset) evaluateRule(message string, ruleIdx, position int) int {
 	return matched
 }
 
+// countMatches counts the number of times a given rule matches the input and
+// then returns the match count and the next index in the string.
+func (r ruleset) countMatches(message string, ruleNum, position int) (matches, matchedChars int) {
+	scanned := position
+	matchedChars = 0
+	matches = 0
+
+	for scanned != -1 {
+		scanned = r.evaluateRule(message, ruleNum, scanned)
+		// if the rule doesn't match, we've found all the matches we will find
+		// for this rule.
+		if scanned == -1 {
+			break
+		}
+		matchedChars = scanned
+		matches++
+	}
+	return
+}
+
 // validate ensures that rule 0 matches all characters in the message.
 // this will handle the corner case where a message matches all rules but has
 // additional characters on the end.
@@ -159,5 +179,34 @@ func part1(input [][]string) int {
 }
 
 func part2(input [][]string) int {
-	return 0
+	r := newRuleset(input[0])
+	result := 0
+
+	// by doing substitution, we can understand the following with our recursive
+	// rules:
+	// * rule 8 will become a chain of invocations of rule 42:
+	//   8: 42 | 42 42 | 42 42 42 | ...
+	// * rule 11 will become a chain of invocations of rule 42, followed by the
+	// **same number of invocations of rule 31**
+	//   11: 42 31 | 42 42 31 31 | 42 42 42 31 31 31 | ...
+	// because rule 0 is rule 8 followed by rule 11, we can sidestep rule 0 and
+	// count the number of times that rule 42 matches, then the number of times
+	// rule 31 matches.
+	// the message is valid if the following conditions hold:
+	// * rule 42 matches m times, where m >= 2
+	// * the remaining string matches rule 31 n times, where n >=1
+	// * all characters match
+	// * m - n  >= 1
+	for _, message := range input[1] {
+		rule42matches, position := r.countMatches(message, 42, 0)
+		if rule42matches < 2 {
+			continue
+		}
+		rule31matches, position := r.countMatches(message, 31, position)
+		if position != len(message) || rule31matches == 0 || rule42matches-rule31matches < 1 {
+			continue
+		}
+		result++
+	}
+	return result
 }
