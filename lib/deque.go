@@ -8,11 +8,13 @@ type Deque interface {
 	PeekBottom() (int, bool)
 	PopBottom() int
 	IsEmpty() bool
+	Count() int
 }
 
 type deque struct {
 	top    *dequeNode
 	bottom *dequeNode
+	count  int
 }
 
 type dequeNode struct {
@@ -43,6 +45,7 @@ func (d *deque) PushTop(data int) {
 	if d.bottom == nil {
 		d.bottom = n
 	}
+	d.count++
 }
 
 func (d *deque) PeekTop() (int, bool) {
@@ -67,7 +70,7 @@ func (d *deque) PopTop() int {
 	} else {
 		d.top.top = nil
 	}
-
+	d.count--
 	return result
 }
 
@@ -93,6 +96,7 @@ func (d *deque) PopBottom() int {
 	if d.bottom == nil {
 		d.top = nil
 	}
+	d.count--
 	return result
 }
 
@@ -110,4 +114,9 @@ func (d *deque) PushBottom(data int) {
 	if d.top == nil {
 		d.top = n
 	}
+	d.count++
+}
+
+func (d *deque) Count() int {
+	return d.count
 }

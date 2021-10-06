@@ -22,6 +22,8 @@ func TestNewDeque(t *testing.T) {
 	assert.Equal(t, 6, tail)
 	assert.True(t, ok)
 
+	assert.Equal(t, 6, d.Count())
+
 	assert.Equal(t, 9, d.PopTop())
 	assert.Equal(t, 4, d.PopTop())
 	assert.Equal(t, 7, d.PopTop())
@@ -30,6 +32,7 @@ func TestNewDeque(t *testing.T) {
 	assert.Equal(t, 6, d.PopTop())
 	assert.Equal(t, 0, d.PopTop())
 	assert.True(t, d.IsEmpty())
+	assert.Equal(t, 0, d.Count())
 }
 
 func TestMoveTopToBottom(t *testing.T) {
