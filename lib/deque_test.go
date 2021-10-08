@@ -97,3 +97,79 @@ func TestPopBottom(t *testing.T) {
 	assert.Equal(t, 0, d.PopBottom())
 	assert.True(t, d.IsEmpty())
 }
+
+func TestTakeTop(t *testing.T) {
+	t.Run("take subset", func(t *testing.T) {
+		d := setupDeque()
+		o := d.TakeTop(3)
+
+		assert.Equal(t, 6, d.Count())
+		assert.Equal(t, 3, o.Count())
+
+		n, ok := o.PeekBottom()
+		assert.Equal(t, 7, n)
+		assert.True(t, ok)
+
+		n = o.PopBottom()
+		assert.Equal(t, 7, n)
+
+		// ensure base deque is unmodified
+		assert.Equal(t, 6, d.Count())
+	})
+
+	t.Run("try taking superset", func(t *testing.T) {
+		d := setupDeque()
+		o := d.TakeTop(100)
+
+		assert.Equal(t, o.Count(), 6)
+
+		n, ok := o.PeekBottom()
+		assert.Equal(t, 6, n)
+		assert.True(t, ok)
+
+		n = o.PopBottom()
+		assert.Equal(t, 6, n)
+
+		// ensure base deque is unmodified
+		assert.Equal(t, 6, d.Count())
+	})
+
+	t.Run("try using negative N", func(t *testing.T) {
+		d := setupDeque()
+		o := d.TakeTop(-1)
+
+		assert.True(t, o.IsEmpty())
+
+		o = d.TakeTop(0)
+		assert.True(t, o.IsEmpty())
+	})
+}
+
+func TestVisit(t *testing.T) {
+	t.Run("visit on empty deque", func(t *testing.T) {
+		f := func(int) {
+			assert.FailNow(t, "wasn't supposed to get called!")
+		}
+
+		d := NewDeque([]int{})
+		d.Visit(f)
+	})
+
+	t.Run("visit a normal deque", func(t *testing.T) {
+		d := setupDeque()
+		i := 0
+		vals := make([]int, d.Count())
+
+		f := func(n int) {
+			vals[i] = n
+			i++
+		}
+
+		d.Visit(f)
+
+		assert.Equal(t, []int{
+			9, 4, 7, 3, 2, 6,
+		}, vals)
+
+	})
+}

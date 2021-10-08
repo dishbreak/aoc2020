@@ -9,6 +9,8 @@ type Deque interface {
 	PopBottom() int
 	IsEmpty() bool
 	Count() int
+	TakeTop(int) Deque
+	Visit(NodeVisitor)
 }
 
 type deque struct {
@@ -119,4 +121,36 @@ func (d *deque) PushBottom(data int) {
 
 func (d *deque) Count() int {
 	return d.count
+}
+
+func (d *deque) TakeTop(n int) Deque {
+	if n > d.count {
+		n = d.count
+	}
+
+	if n < 0 {
+		n = 0
+	}
+
+	if n == 0 {
+		return NewDeque([]int{})
+	}
+
+	values := make([]int, n)
+
+	con := d.top
+	for i := 0; i < n; i++ {
+		values[i] = con.data
+		con = con.bottom
+	}
+
+	return NewDeque(values)
+}
+
+type NodeVisitor func(int)
+
+func (d *deque) Visit(n NodeVisitor) {
+	for con := d.top; con != nil; con = con.bottom {
+		n(con.data)
+	}
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input, err := lib.GetInput("inputs/dayNN.txt")
+	input, err := lib.GetInputAsSections("inputs/day22.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -16,10 +16,15 @@ func main() {
 	fmt.Printf("Part 2: %d\n", part2(input))
 }
 
-func part1(input []string) int {
-	return 0
+func part1(input [][]string) int {
+	game := buildGame(input)
+
+	for game.playRound() {
+	}
+
+	return game.scoreGame()
 }
 
-func part2(input []string) int {
+func part2(input [][]string) int {
 	return 0
 }
