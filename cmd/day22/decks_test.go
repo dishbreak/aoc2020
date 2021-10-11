@@ -111,3 +111,18 @@ func TestScoreGame(t *testing.T) {
 		assert.Equal(t, 85, game.scoreGame())
 	})
 }
+
+func TestRecursiveGame(t *testing.T) {
+	t.Run("no endless games", func(t *testing.T) {
+		inputs := [][]string{
+			{"Player 1:", "43", "19"},
+			{"Player 2:", "2", "29", "14"},
+		}
+
+		r := buildRecursiveCombatGame(inputs)
+
+		p1, p2 := r.playGame()
+		// if infintie game checking is working, this shouldn't cause any issues.
+		assert.Greater(t, p1, p2)
+	})
+}

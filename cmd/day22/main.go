@@ -26,5 +26,12 @@ func part1(input [][]string) int {
 }
 
 func part2(input [][]string) int {
-	return 0
+	game := buildRecursiveCombatGame(input)
+
+	p1score, p2score := game.playGame()
+
+	if p1score > 0 {
+		return p1score
+	}
+	return p2score
 }

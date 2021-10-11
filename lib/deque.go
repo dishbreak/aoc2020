@@ -1,5 +1,11 @@
 package lib
 
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
 type Deque interface {
 	PushTop(data int)
 	PeekTop() (int, bool)
@@ -11,6 +17,7 @@ type Deque interface {
 	Count() int
 	TakeTop(int) Deque
 	Visit(NodeVisitor)
+	String() string
 }
 
 type deque struct {
@@ -153,4 +160,16 @@ func (d *deque) Visit(n NodeVisitor) {
 	for con := d.top; con != nil; con = con.bottom {
 		n(con.data)
 	}
+}
+
+func (d *deque) String() string {
+	result := make([]string, d.count)
+	i := 0
+	f := func(n int) {
+		result[i] = strconv.Itoa(n)
+		i++
+	}
+	d.Visit(f)
+
+	return fmt.Sprintf("[%s] (%d)", strings.Join(result, ", "), d.count)
 }
