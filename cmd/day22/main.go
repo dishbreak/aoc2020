@@ -17,21 +17,14 @@ func main() {
 }
 
 func part1(input [][]string) int {
-	game := buildGame(input)
-
-	for game.playRound() {
-	}
-
-	return game.scoreGame()
+	g := newGame(input)
+	g.playGame()
+	return g.winningScore()
 }
 
 func part2(input [][]string) int {
-	game := buildRecursiveCombatGame(input)
-
-	p1score, p2score := game.playGame()
-
-	if p1score > 0 {
-		return p1score
-	}
-	return p2score
+	g := newGame(input)
+	g.recurse = true
+	g.playGame()
+	return g.winningScore()
 }
