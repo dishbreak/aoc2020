@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var input = []string{}
+var input = ""
 
 func TestPart1(t *testing.T) {
 	assert.Equal(t, 0, part1(input))
