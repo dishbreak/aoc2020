@@ -91,9 +91,9 @@ func TestInsertAt(t *testing.T) {
 			result: []int{2, 3, 7, 8, 9, 5},
 		},
 		"insert end": {
-			index:  4,
+			index:  5,
 			value:  2,
-			result: []int{3, 7, 8, 9, 2, 5},
+			result: []int{3, 7, 8, 9, 5, 2},
 		},
 	}
 
@@ -104,4 +104,14 @@ func TestInsertAt(t *testing.T) {
 			assert.Equal(t, tc.result, g.cups)
 		})
 	}
+}
+
+func TestPlayRound(t *testing.T) {
+	g := newShellGame("389125467")
+
+	for i := 0; i < 10; i++ {
+		g.playRound()
+	}
+
+	assert.Equal(t, "92658374", g.String())
 }
