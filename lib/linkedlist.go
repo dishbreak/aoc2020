@@ -1,5 +1,10 @@
 package lib
 
+import (
+	"strconv"
+	"strings"
+)
+
 type LinkedListNode struct {
 	Data int
 	Next *LinkedListNode
@@ -12,6 +17,19 @@ type LinkedList struct {
 
 type LinkedListBuilder struct {
 	list *LinkedList
+}
+
+func (l *LinkedList) String() string {
+	b := strings.Builder{}
+
+	for iter := l.Head; iter != nil; iter = iter.Next {
+		b.WriteString(strconv.Itoa(iter.Data))
+		b.WriteString(" -> ")
+	}
+
+	b.WriteString("nil")
+
+	return b.String()
 }
 
 func (b *LinkedListBuilder) AddItem(data int) *LinkedListNode {
@@ -31,4 +49,8 @@ func (b *LinkedListBuilder) AddItem(data int) *LinkedListNode {
 	}
 
 	return n
+}
+
+func (b *LinkedListBuilder) GetList() *LinkedList {
+	return b.list
 }

@@ -89,7 +89,7 @@ func part2(input []string) string {
 	values := make([]string, len(allergens))
 
 	i := 0
-	for key, _ := range allergens {
+	for key := range allergens {
 		keys[i] = key
 		i++
 	}

@@ -42,37 +42,6 @@ func (g *shellGame) normalize(idx int) int {
 	return idx
 }
 
-func (g *shellGame) removeAt(idx int) (val int) {
-
-	idx = g.normalize(idx)
-	val = g.cups[idx]
-
-	if idx == 0 {
-		g.cups = g.cups[1:]
-		return
-	}
-
-	if idx == len(g.cups)-1 {
-		g.cups = g.cups[:idx]
-		return
-	}
-
-	g.cups = append(g.cups[:idx], g.cups[idx+1:]...)
-	return
-}
-
-func (g *shellGame) insertAt(val, idx int) {
-	if idx == len(g.cups) {
-		g.cups = append(g.cups, val)
-		return
-	}
-
-	idx = g.normalize(idx)
-
-	g.cups = append(g.cups[:idx+1], g.cups[idx:]...)
-	g.cups[idx] = val
-}
-
 func (g *shellGame) decrement(v int) int {
 	v--
 	if v < g.min {
