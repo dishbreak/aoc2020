@@ -91,3 +91,9 @@ func (g *bigShellGame) playRound() {
 	// move the current cup over.
 	g.iter = g.iter.Next
 }
+
+type gameCup *lib.LinkedListNode
+
+func (g *bigShellGame) getCup(label int) gameCup {
+	return gameCup(g.cups[label])
+}

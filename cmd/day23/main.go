@@ -21,5 +21,12 @@ func part1(input string) string {
 }
 
 func part2(input string) int {
-	return 0
+	g := newCrabShellGame(input)
+
+	for i := 0; i < 10000000; i++ {
+		g.playRound()
+	}
+
+	c := g.getCup(1)
+	return c.Next.Data * c.Next.Next.Data
 }
