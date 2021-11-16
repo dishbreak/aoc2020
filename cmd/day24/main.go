@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	input, err := lib.GetInput("inputs/dayNN.txt")
+	input, err := lib.GetInput("inputs/day24.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -17,7 +17,14 @@ func main() {
 }
 
 func part1(input []string) int {
-	return 0
+	l := &lobbyFloor{}
+	l.tiles = make(map[lib.Point3D]int)
+
+	for _, step := range input {
+		l.flipTile(step)
+	}
+
+	return l.countBlackTiles()
 }
 
 func part2(input []string) int {
