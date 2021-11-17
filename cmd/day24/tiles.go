@@ -83,8 +83,18 @@ func (l *lobbyFloor) flipTile(instructions string) {
 
 func (l *lobbyFloor) countBlackTiles() int {
 	result := 0
-	for _, val := range l.tiles {
-		result += val % 2
+	for p, val := range l.tiles {
+		isBlack := val % 2
+		result += isBlack
+		l.tiles[p] = isBlack
 	}
 	return result
+}
+
+func (l *lobbyFloor) countNeighbors(p lib.Point3D) int {
+	acc := 0
+	for _, v := range directionToVector {
+		acc += l.tiles[p.Add(v)]
+	}
+	return acc
 }
