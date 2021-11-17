@@ -21,6 +21,9 @@ func part1(input []string) int {
 	l.tiles = make(map[lib.Point3D]int)
 
 	for _, step := range input {
+		if step == "" {
+			continue
+		}
 		l.flipTile(step)
 	}
 
