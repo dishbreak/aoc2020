@@ -81,12 +81,28 @@ func (l *lobbyFloor) flipTile(instructions string) {
 	l.tiles[p]++
 }
 
+func (l *lobbyFloor) normalize() {
+	for p, val := range l.tiles {
+		val = val % 2
+		if val == 0 {
+			l.tiles[p] = 0
+		} else {
+			l.tiles[p] = 1
+		}
+
+		for _, v := range directionToVector {
+			d := p.Add(v)
+			if _, ok := l.tiles[d]; !ok {
+				l.tiles[d] = 0
+			}
+		}
+	}
+}
+
 func (l *lobbyFloor) countBlackTiles() int {
 	result := 0
-	for p, val := range l.tiles {
-		isBlack := val % 2
-		result += isBlack
-		l.tiles[p] = isBlack
+	for _, val := range l.tiles {
+		result += val % 2
 	}
 	return result
 }
@@ -97,4 +113,30 @@ func (l *lobbyFloor) countNeighbors(p lib.Point3D) int {
 		acc += l.tiles[p.Add(v)]
 	}
 	return acc
+}
+
+func (l *lobbyFloor) advanceDay() {
+	l.normalize()
+
+	ntiles := make(map[lib.Point3D]int)
+
+	for p, val := range l.tiles {
+		b := l.countNeighbors(p)
+		switch val {
+		case 0:
+			if b == 2 {
+				ntiles[p] = 1
+			} else {
+				ntiles[p] = 0
+			}
+		case 1:
+			if b == 0 || b > 2 {
+				ntiles[p] = 0
+			} else {
+				ntiles[p] = 1
+			}
+		}
+	}
+
+	l.tiles = ntiles
 }

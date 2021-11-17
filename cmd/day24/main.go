@@ -31,5 +31,19 @@ func part1(input []string) int {
 }
 
 func part2(input []string) int {
-	return 0
+	l := &lobbyFloor{}
+	l.tiles = make(map[lib.Point3D]int)
+
+	for _, step := range input {
+		if step == "" {
+			continue
+		}
+		l.flipTile(step)
+	}
+
+	for i := 0; i < 100; i++ {
+		l.advanceDay()
+	}
+
+	return l.countBlackTiles()
 }
