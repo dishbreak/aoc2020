@@ -45,13 +45,14 @@ func part2(input []int) int {
 }
 
 func getLoopSize(publicKey int) int {
+	// brute-force the loop count.
+	// note that for the puzzle input this could take many, many minutes!
 	val := 1
 	i := 0
 	for ; val != publicKey; i++ {
 
 		val = val * 7
 		val = val % 20201227
-		fmt.Printf("loop %d: %d\n", i, val)
 	}
 	return i
 }
@@ -61,7 +62,6 @@ func getEncKey(publicKey, loopSize int) int {
 	for i := 1; i <= loopSize; i++ {
 		val = val * publicKey
 		val = val % 20201227
-		fmt.Printf("loop %d: %d\n", i, val)
 	}
 	return val
 }
