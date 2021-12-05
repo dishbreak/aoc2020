@@ -27,12 +27,16 @@ func part1(input []int) int {
 	doorPk := input[0]
 	cardPk := input[1]
 
-	loopSize, err := getLoopSize(doorPk)
-	if err != nil {
-		panic(err)
+	cardLoop := getLoopSize(cardPk)
+	doorLoop := getLoopSize(doorPk)
+
+	encKey := getEncKey(cardPk, doorLoop)
+
+	if other := getEncKey(doorPk, cardLoop); encKey != other {
+		panic(fmt.Errorf("encryption key mismatch, card got %d, door got %d", other, encKey))
 	}
 
-	return getEncKey(cardPk, loopSize)
+	return encKey
 }
 
 func part2(input []int) int {
@@ -40,25 +44,24 @@ func part2(input []int) int {
 	return 0
 }
 
-func getLoopSize(publicKey int) (int, error) {
-	for i := 1; i <= 20; i++ {
-		val := 1
-		for j := 0; j < i; j++ {
-			val = val * 7
-			val = val % 20201227
-		}
-		if val == publicKey {
-			return i, nil
-		}
+func getLoopSize(publicKey int) int {
+	// brute-force the loop count.
+	// note that for the puzzle input this could take many, many minutes!
+	val := 1
+	i := 0
+	for ; val != publicKey; i++ {
+
+		val = val * 7
+		val = val % 20201227
 	}
-	return -1, fmt.Errorf("failed to break key %d", publicKey)
+	return i
 }
 
 func getEncKey(publicKey, loopSize int) int {
-	encKey := publicKey
-	for i := 0; i < loopSize; i++ {
-		encKey = encKey * 7
-		encKey = encKey % 20201227
+	val := 1
+	for i := 1; i <= loopSize; i++ {
+		val = val * publicKey
+		val = val % 20201227
 	}
-	return encKey
+	return val
 }
