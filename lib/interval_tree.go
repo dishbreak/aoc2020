@@ -25,6 +25,11 @@ func (r *Range) Valid() bool {
 	return r.Min < r.Max
 }
 
+//Overlaps will return true when the range overlaps with the specified range, inclusive of min/max.
+func (r *Range) Overlaps(o *Range) bool {
+	return o.Min <= r.Max
+}
+
 // IntervalTreeNode stores a set of intervals in a binary tree for simplified retrieval.
 type IntervalTreeNode struct {
 	CenterPoint          int
@@ -39,7 +44,7 @@ type IntervalTreeNode struct {
 func NewIntervalTree(input []*Range) (*IntervalTreeNode, error) {
 	for _, interval := range input {
 		if !interval.Valid() {
-			return nil, fmt.Errorf("Invalid range %v", interval)
+			return nil, fmt.Errorf("invalid range %v", interval)
 		}
 	}
 	return newIntervalTreeNode(input), nil
@@ -100,9 +105,7 @@ func (i *IntervalTreeNode) Find(query int) []*Range {
 
 func (i *IntervalTreeNode) findInNode(query int, matches []*Range) []*Range {
 	if query == i.CenterPoint {
-		for _, interval := range i.CenterIntervalsByMin {
-			matches = append(matches, interval)
-		}
+		matches = append(matches, i.CenterIntervalsByMin...)
 
 		if i.Left != nil {
 			matches = i.Left.findInNode(query, matches)
@@ -136,6 +139,48 @@ func (i *IntervalTreeNode) findInNode(query int, matches []*Range) []*Range {
 
 		if i.Right != nil {
 			return i.Right.findInNode(query, matches)
+		}
+	}
+
+	return matches
+}
+
+func (i *IntervalTreeNode) FindRange(query *Range) []*Range {
+	matches := make([]*Range, 0)
+	return i.findRangeInNode(query, matches)
+}
+
+func (i *IntervalTreeNode) findRangeInNode(query *Range, matches []*Range) []*Range {
+	if query.Contains(i.CenterPoint) {
+		matches = append(matches, i.CenterIntervalsByMin...)
+		if i.Left != nil {
+			matches = i.Left.findRangeInNode(query, matches)
+		}
+		if i.Right != nil {
+			matches = i.Right.findRangeInNode(query, matches)
+		}
+	}
+	if query.Max < i.CenterPoint {
+		for _, interval := range i.CenterIntervalsByMin {
+			if !interval.Overlaps(query) {
+				break
+			}
+			matches = append(matches, interval)
+		}
+		if i.Left != nil {
+			matches = i.Left.findRangeInNode(query, matches)
+		}
+	}
+	if query.Min > i.CenterPoint {
+		for _, interval := range i.CenterIntervalsByMax {
+			if !interval.Overlaps(query) {
+				break
+			}
+			matches = append(matches, interval)
+		}
+
+		if i.Right != nil {
+			matches = i.Right.findRangeInNode(query, matches)
 		}
 	}
 
