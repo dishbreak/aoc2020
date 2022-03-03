@@ -59,6 +59,25 @@ func (m *Matrix) Rotate() {
 	}
 }
 
+func (m *Matrix) FlipHorizontal() {
+	var swap []byte
+	for i := 0; i < len(m.d); i++ {
+		swap = m.d[i]
+		m.d[i] = m.d[m.n-i-1]
+		m.d[m.n-i-1] = swap
+	}
+}
+
+func (m *Matrix) FlipVertical() {
+	for _, row := range m.d {
+		for i := 0; i < len(row)/2; i++ {
+			swap := row[i]
+			row[i] = row[m.n-i-1]
+			row[m.n-i-1] = swap
+		}
+	}
+}
+
 func (m *Matrix) String() string {
 	b := strings.Builder{}
 	for _, row := range m.d {
