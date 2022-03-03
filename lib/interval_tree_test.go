@@ -39,3 +39,12 @@ func TestNoMatch(t *testing.T) {
 	result := tree.Find(11)
 	assert.Equal(t, 0, len(result))
 }
+
+func TestRangeFind(t *testing.T) {
+	tree, err := lib.NewIntervalTree(input)
+	assert.Nil(t, err)
+	result := tree.FindRange(&lib.Range{4, 15, ""})
+	assert.Equal(t, 3, len(result))
+	expected := input[2:5]
+	assert.Equal(t, expected, result)
+}
