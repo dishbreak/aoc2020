@@ -108,23 +108,19 @@ func (t *tile) getEdges() []int {
 	}
 }
 
-func (t *tile) rotate() *tile {
-	o := &tile{
-		id:  t.id,
-		raw: t.raw,
-		edges: map[edge]int{
-			north: rev(t.edges[west], t.bits),
-			east:  t.edges[north],
-			south: rev(t.edges[east], t.bits),
-			west:  t.edges[south],
-		},
-		bits: t.bits,
+func (t *tile) rotate() {
+	
+	for l := 0; l < len(t.raw); l++ {
+		for i := l; i < len(t.raw) - l; i++ {
+			s1 := t.raw[l][len(t.raw)-i-l]
+			t.raw[l][len(t.raw)-i-l] = t.raw[l][]
+		}
 	}
-
-	return o
 }
 
 func (t *tile) flipHorizontal() *tile {
+	raw := make([]string, len(t.raw))
+	for i, line := range
 	o := &tile{
 		id:  t.id,
 		raw: t.raw,
