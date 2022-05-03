@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 )
 
 func main() {
@@ -91,82 +91,85 @@ func part2(input []instruction) int {
 	// time.
 	// this could take awhile; let's speed up the process using goroutines!
 
-	// first, we'll make a channel for transmitting the instruction to correct
-	// to the goroutines.
-	flippedInstruction := make(chan executionSnapshot, len(candidateInstructions))
-	// next, we'll make a channel that the goroutines can use to send their
-	// exeuction results back to the main thread.
+	// first, we'll make a channel that the goroutines can use to send their
+	// execution results back to the main thread.
 	result := make(chan executionResult, len(candidateInstructions))
 
-	var wg sync.WaitGroup
-	// start 10 workers to run exectuions of the code.
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func(flippedInstruction <-chan executionSnapshot, result chan<- executionResult) {
-			defer wg.Done()
-			for j := range flippedInstruction {
-				// re-execute the program.
-				// note that this time the program counter is declared outside
-				// the for loop because we need it to check if the program exited.
-				accumulator := j.Accumulator
-				visited := make([]bool, len(input))
-				k := j.ProgramCounter
+	// next, we'll make a channel that the main goroutine can use to shut down all other children.
+	done := make(chan interface{})
 
-				for k < len(input) && !visited[k] {
-					visited[k] = true
-					command := input[k].Command
+	for _, snapshot := range candidateInstructions {
+		go executeProgram(input, snapshot, result, done)
+	}
 
-					// flip the command if the program counter matches the input
-					// we got.
-					if k == j.ProgramCounter {
-						switch command {
-						case "jmp":
-							command = "nop"
-						case "nop":
-							command = "jmp"
-						}
-					}
+	reports := 0
+	for r := range result {
+		reports++
+		if r.Exited {
+			close(done)
+			fmt.Printf("collected %d reports from %d candidates\n", reports, len(candidateInstructions))
+			return (r.Accumulator)
+		}
+		if reports == len(candidateInstructions) {
+			panic(errors.New("no solution found"))
+		}
+	}
+	panic(errors.New("unreachable"))
+}
 
-					// execute the command as normal.
-					switch command {
-					case "nop":
-						k++
-					case "acc":
-						accumulator += input[k].Argument
-						k++
-					case "jmp":
-						k += input[k].Argument
-					}
-				}
-				// record the result
-				runResult := executionResult{
-					Exited:      k == len(input),
-					Accumulator: accumulator,
-				}
-				result <- runResult
+const (
+	CmdJmp = "jmp"
+	CmdNop = "nop"
+	CmdAcc = "acc"
+)
+
+func executeProgram(instructions []instruction, snapshot executionSnapshot, result chan executionResult, done chan interface{}) {
+	accumulator := snapshot.Accumulator
+	visited := make([]bool, len(instructions))
+	pc := snapshot.ProgramCounter
+
+	for pc < len(instructions) {
+		select {
+		case <-done: // main goroutine has its solution, stop running.
+			return
+		default:
+		}
+
+		// signal a loop detection and stop execution
+		if visited[pc] {
+			result <- executionResult{
+				Exited:      false,
+				Accumulator: accumulator,
 			}
-		}(flippedInstruction, result)
-	}
+			return
+		}
 
-	// feed the inputs to the workers.
-	for _, inst := range candidateInstructions {
-		flippedInstruction <- inst
-	}
-	// important! we need to close the channel so workers know to exit.
-	close(flippedInstruction)
-
-	accumulator = 0
-	// collect results
-	for i := 0; i < len(candidateInstructions); i++ {
-		s := <-result
-		if s.Exited {
-			accumulator = s.Accumulator
+		command, arg := instructions[pc].Command, instructions[pc].Argument
+		if pc == snapshot.ProgramCounter {
+			switch command {
+			case CmdNop:
+				command = CmdJmp
+			case CmdJmp:
+				command = CmdNop
+			}
+		}
+		visited[pc] = true
+		switch command {
+		case CmdJmp:
+			pc += arg
+		case CmdAcc:
+			accumulator += arg
+			pc++
+		case CmdNop:
+			pc++
 		}
 	}
 
-	// make sure everything is done before returning.
-	wg.Wait()
-	return accumulator
+	// if we got here, then we managed to exit correctly!
+	result <- executionResult{
+		Exited:      true,
+		Accumulator: accumulator,
+	}
 }
 
 type instruction struct {
