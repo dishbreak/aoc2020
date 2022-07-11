@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"image"
 	"log"
 	"strconv"
 	"strings"
@@ -209,6 +210,24 @@ func part1(input []*tile) int {
 	return acc
 }
 
+func flipTilTest(t *tile, test func(*tile) bool) {
+	for i := 0; i < 4 && !test(t); i++ {
+		t.Rotate()
+	}
+
+	for i := 0; i < 4 && !test(t); i++ {
+		if i != 0 {
+			t.FlipVertical()
+		}
+		t.Rotate()
+		t.FlipVertical()
+	}
+
+	if !test(t) {
+		panic(errors.New("failed to find passing rotation"))
+	}
+}
+
 func part2(input []*tile) int {
 	edgesForTile := mapEdgesToTile(input)
 
@@ -226,20 +245,65 @@ func part2(input []*tile) int {
 
 	start := matches[0]
 
-	for i := 0; i < 4 && !isNorthwestCorner(start); i++ {
-		start.Rotate()
-	}
+	flipTilTest(start, isNorthwestCorner)
+	tileSet := make(map[image.Point]*tile)
+	q := make([]image.Point, 1)
+	q[0] = image.Point{0, 0}
+	tileSet[q[0]] = start
 
-	for i := 0; i < 4 && !isNorthwestCorner(start); i++ {
-		if i != 0 {
-			start.FlipVertical()
+	findNeighbor := func(t *tile, pt image.Point, e edge) (image.Point, bool) {
+		var v image.Point
+		var oppE edge
+		switch e {
+		case south:
+			v = image.Pt(0, 1)
+			oppE = north
+		case east:
+			v = image.Pt(1, 0)
+			oppE = west
 		}
-		start.Rotate()
-		start.FlipVertical()
+
+		nPt := pt.Add(v)
+
+		if _, ok := tileSet[nPt]; ok {
+			return nPt, false
+		}
+
+		neighbors := edgesForTile[t.edges[e]]
+		if len(neighbors) == 1 {
+			return nPt, false
+		}
+
+		var hit *tile
+		for _, neighbor := range neighbors {
+			if t.id != neighbor.id {
+				hit = neighbor
+				break
+			}
+		}
+
+		flipTilTest(hit, func(oT *tile) bool {
+			return t.edges[e] == oT.edges[oppE]
+		})
+
+		tileSet[nPt] = hit
+		return nPt, true
 	}
 
-	if !isNorthwestCorner(start) {
-		panic(errors.New("failed to find NW corner"))
+	for len(q) > 0 {
+		p := q[0]
+		q = q[1:]
+
+		n, ok := tileSet[p]
+		if !ok {
+			continue
+		}
+
+		for _, e := range []edge{south, east} {
+			if pt, ok := findNeighbor(n, p, e); ok {
+				q = append(q, pt)
+			}
+		}
 	}
 
 	return 0
