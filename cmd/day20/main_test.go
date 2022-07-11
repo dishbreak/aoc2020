@@ -176,56 +176,6 @@ func TestToTile(t *testing.T) {
 	assert.Equal(t, expected, myTile)
 }
 
-func TestRotate(t *testing.T) {
-	input := &tile{
-		id: 2311,
-		edges: map[edge]int{
-			north: 300,
-			east:  616,
-			south: 924,
-			west:  318,
-		},
-		raw: []string{
-			"..##.#..#.",
-			"##..#.....",
-			"#...##..#.",
-			"####.#...#",
-			"##.##.###.",
-			"##...#.###",
-			".#.#.#..##",
-			"..#....#..",
-			"###...#.#.",
-			"..###..###",
-		},
-		bits: 10,
-	}
-
-	expected := &tile{
-		id: 2311,
-		edges: map[edge]int{
-			north: 498,
-			east:  300,
-			south: 89,
-			west:  924,
-		},
-		raw: []string{
-			"..##.#..#.",
-			"##..#.....",
-			"#...##..#.",
-			"####.#...#",
-			"##.##.###.",
-			"##...#.###",
-			".#.#.#..##",
-			"..#....#..",
-			"###...#.#.",
-			"..###..###",
-		},
-		bits: 10,
-	}
-
-	assert.Equal(t, expected, input.rotate())
-}
-
 func TestRev(t *testing.T) {
 	type testData struct {
 		expected int

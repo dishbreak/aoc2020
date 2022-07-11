@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -23,6 +24,7 @@ type tile struct {
 	bits  int
 	edges map[edge]int
 	raw   []string
+	img   *lib.Matrix
 }
 
 func main() {
@@ -73,6 +75,7 @@ func toTile(input []string) *tile {
 	id, _ := strconv.Atoi(strings.Trim(parts[1], ":"))
 	result.id = id
 	result.raw = input[1:]
+	result.img = lib.NewMatrix(result.raw)
 
 	for lineNo := 1; lineNo < len(input); lineNo++ {
 		line := input[lineNo]
@@ -112,9 +115,37 @@ func (t *tile) getEdges() []int {
 	}
 }
 
-func part1(input []*tile) int {
-	// start by remapping all the possible edge values.
-	// this will produce a map that contains all tiles with the given edge.
+func (t *tile) Rotate() {
+	oldEdges := make(map[edge]int)
+	for k, v := range t.edges {
+		oldEdges[k] = v
+	}
+
+	t.edges[east] = oldEdges[north]
+	t.edges[south] = rev(oldEdges[east], t.bits)
+	t.edges[west] = oldEdges[south]
+	t.edges[north] = rev(oldEdges[west], t.bits)
+
+	t.img.Rotate()
+}
+
+func (t *tile) FlipVertical() {
+	oldEdges := make(map[edge]int)
+	for k, v := range t.edges {
+		oldEdges[k] = v
+	}
+
+	t.edges[east] = oldEdges[west]
+	t.edges[west] = oldEdges[east]
+	t.edges[north] = rev(oldEdges[north], t.bits)
+	t.edges[south] = rev(oldEdges[south], t.bits)
+
+	t.img.FlipVertical()
+}
+
+// map all the possible edge values to the corresponding tiles
+// this will produce a map that contains all tiles with the given edge.
+func mapEdgesToTile(input []*tile) map[int][]*tile {
 	edgesForTile := make(map[int][]*tile)
 	for _, t := range input {
 		for _, e := range t.getEdges() {
@@ -126,20 +157,23 @@ func part1(input []*tile) int {
 			edgesForTile[e] = l
 		}
 	}
+	return edgesForTile
+}
 
+func findCornerTiles(edgesForTile map[int][]*tile) []*tile {
 	// our corner tiles include two edges that cannot match to anything.
 	// in the previous map, if a given edge maps to just 1 tile, the tile
 	// has an unmatched edge with the given value
-	unmatchedEdges := make(map[int][]int)
+	unmatchedEdges := make(map[*tile][]int)
 
 	for edge, tiles := range edgesForTile {
 		if len(tiles) == 1 {
-			t, ok := unmatchedEdges[tiles[0].id]
+			t, ok := unmatchedEdges[tiles[0]]
 			if !ok {
 				t = make([]int, 0)
 			}
 			t = append(t, edge)
-			unmatchedEdges[tiles[0].id] = t
+			unmatchedEdges[tiles[0]] = t
 		}
 	}
 
@@ -147,23 +181,66 @@ func part1(input []*tile) int {
 	// 4 you say?! This is because in order for a tile to have 2
 	// unmatched edges, no rotation or translation (which generates a reverse)
 	// will make more edges match.
-	matches := 0
-	acc := 1
-	for tileId, ue := range unmatchedEdges {
+	matches := make([]*tile, 0)
+	for tilePtr, ue := range unmatchedEdges {
 		if len(ue) == 4 {
-			acc *= tileId
-			matches++
+			matches = append(matches, tilePtr)
 		}
 	}
 
-	if matches != 4 {
-		log.Fatalf("incorrect number of matches! expected 4, got %d", matches)
+	return matches
+}
+
+func part1(input []*tile) int {
+
+	edgesForTile := mapEdgesToTile(input)
+
+	matches := findCornerTiles(edgesForTile)
+
+	if len(matches) != 4 {
+		log.Fatalf("incorrect number of matches! expected 4, got %d", len(matches))
 		return -1
 	}
 
+	acc := 1
+	for _, tilePtr := range matches {
+		acc *= tilePtr.id
+	}
 	return acc
 }
 
 func part2(input []*tile) int {
+	edgesForTile := mapEdgesToTile(input)
+
+	matches := findCornerTiles(edgesForTile)
+
+	isNorthwestCorner := func(t *tile) bool {
+		for _, e := range []edge{north, west} {
+			neighbors := edgesForTile[t.edges[e]]
+			if len(neighbors) > 1 {
+				return false
+			}
+		}
+		return true
+	}
+
+	start := matches[0]
+
+	for i := 0; i < 4 && !isNorthwestCorner(start); i++ {
+		start.Rotate()
+	}
+
+	for i := 0; i < 4 && !isNorthwestCorner(start); i++ {
+		if i != 0 {
+			start.FlipVertical()
+		}
+		start.Rotate()
+		start.FlipVertical()
+	}
+
+	if !isNorthwestCorner(start) {
+		panic(errors.New("failed to find NW corner"))
+	}
+
 	return 0
 }

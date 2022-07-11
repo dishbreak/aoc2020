@@ -36,9 +36,7 @@ func NewMatrix(s []string) *Matrix {
 }
 
 func (m *Matrix) swap(one, other image.Point) {
-	swap := m.d[one.Y][one.X]
-	m.d[one.Y][one.X] = m.d[other.Y][other.X]
-	m.d[other.Y][other.X] = swap
+	m.d[one.Y][one.X], m.d[other.Y][other.X] = m.d[other.Y][other.X], m.d[one.Y][one.X]
 }
 
 func (m *Matrix) Rotate() {
