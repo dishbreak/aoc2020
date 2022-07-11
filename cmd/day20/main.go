@@ -64,6 +64,10 @@ func toTile(input []string) *tile {
 		},
 	}
 
+	if input[len(input)-1] == "" {
+		input = input[:len(input)-1]
+	}
+
 	// parse id out of the first line.
 	parts := strings.Split(input[0], " ")
 	id, _ := strconv.Atoi(strings.Trim(parts[1], ":"))
@@ -106,48 +110,6 @@ func (t *tile) getEdges() []int {
 		rev(t.edges[south], t.bits),
 		rev(t.edges[west], t.bits),
 	}
-}
-
-func (t *tile) rotate() {
-	
-	for l := 0; l < len(t.raw); l++ {
-		for i := l; i < len(t.raw) - l; i++ {
-			s1 := t.raw[l][len(t.raw)-i-l]
-			t.raw[l][len(t.raw)-i-l] = t.raw[l][]
-		}
-	}
-}
-
-func (t *tile) flipHorizontal() *tile {
-	raw := make([]string, len(t.raw))
-	for i, line := range
-	o := &tile{
-		id:  t.id,
-		raw: t.raw,
-		edges: map[edge]int{
-			north: t.edges[south],
-			west:  rev(t.edges[west], t.bits),
-			east:  rev(t.edges[east], t.bits),
-			south: t.edges[north],
-		},
-		bits: t.bits,
-	}
-	return o
-}
-
-func (t *tile) flipVertical() *tile {
-	o := &tile{
-		id:  t.id,
-		raw: t.raw,
-		edges: map[edge]int{
-			north: rev(t.edges[north], t.bits),
-			east:  t.edges[west],
-			south: rev(t.edges[south], t.bits),
-			west:  t.edges[east],
-		},
-		bits: t.bits,
-	}
-	return o
 }
 
 func part1(input []*tile) int {
