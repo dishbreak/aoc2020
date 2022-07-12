@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"math"
 	"strconv"
 	"strings"
 
@@ -273,6 +274,46 @@ func validateTileSet(img map[image.Point]*tile) bool {
 	return true
 }
 
+func knitRow(tileSet map[image.Point]*tile, rowIdx int) [][]byte {
+	t, ok := tileSet[image.Pt(0, rowIdx)]
+	if !ok {
+		return nil
+	}
+
+	b := make([][]byte, t.img.GetDim())
+	for i := range b {
+		b[i] = make([]byte, 0)
+	}
+
+	pt := image.Pt(0, rowIdx)
+	for {
+		t, ok := tileSet[pt]
+		if !ok {
+			break
+		}
+
+		for i, row := range t.img.GetBytes() {
+			b[i] = append(b[i], row...)
+		}
+
+		pt = pt.Add(image.Pt(1, 0))
+	}
+	return b
+}
+
+func knit(tileSet map[image.Point]*tile) *lib.Matrix {
+	b := make([][]byte, 0)
+
+	dim := int(math.Sqrt(float64(len(tileSet))))
+
+	for i := 0; i < dim; i++ {
+		b = append(b, knitRow(tileSet, i)...)
+	}
+
+	m := lib.NewMatrixFromBytes(b)
+	return m
+}
+
 func part2(input []*tile) int {
 	edgesForTile := mapEdgesToTile(input)
 
@@ -355,6 +396,11 @@ func part2(input []*tile) int {
 
 	if !validateTileSet(tileSet) {
 		panic(errors.New("image is invalid"))
+	}
+
+	fullImg := knit(tileSet)
+	if fullImg.GetDim() == 0 {
+		panic(errors.New("empty matrix"))
 	}
 
 	return 0

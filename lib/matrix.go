@@ -35,6 +35,33 @@ func NewMatrix(s []string) *Matrix {
 	return m
 }
 
+func NewMatrixFromBytes(b [][]byte) *Matrix {
+	m := &Matrix{
+		d: make([][]byte, len(b)),
+		n: len(b),
+	}
+
+	for i, row := range b {
+		m.d[i] = make([]byte, len(row))
+		copy(m.d[i], row)
+	}
+
+	return m
+}
+
+func (m *Matrix) GetBytes() [][]byte {
+	d := make([][]byte, len(m.d))
+	for i, r := range m.d {
+		d[i] = make([]byte, len(m.d[i]))
+		copy(d[i], r)
+	}
+	return d
+}
+
+func (m *Matrix) GetDim() int {
+	return m.n
+}
+
 func (m *Matrix) swap(one, other image.Point) {
 	m.d[one.Y][one.X], m.d[other.Y][other.X] = m.d[other.Y][other.X], m.d[one.Y][one.X]
 }
