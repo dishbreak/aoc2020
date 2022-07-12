@@ -210,20 +210,25 @@ func part1(input []*tile) int {
 	return acc
 }
 
-func flipTilTest(t *tile, test func(*tile) bool) {
-	for i := 0; i < 4 && !test(t); i++ {
-		t.Rotate()
+type Rotatable interface {
+	Rotate()
+	FlipVertical()
+}
+
+func flipTilTest(r Rotatable, test func(Rotatable) bool) {
+	for i := 0; i < 4 && !test(r); i++ {
+		r.Rotate()
 	}
 
-	for i := 0; i < 4 && !test(t); i++ {
+	for i := 0; i < 4 && !test(r); i++ {
 		if i != 0 {
-			t.FlipVertical()
+			r.FlipVertical()
 		}
-		t.Rotate()
-		t.FlipVertical()
+		r.Rotate()
+		r.FlipVertical()
 	}
 
-	if !test(t) {
+	if !test(r) {
 		panic(errors.New("failed to find passing rotation"))
 	}
 }
@@ -273,7 +278,8 @@ func part2(input []*tile) int {
 
 	matches := findCornerTiles(edgesForTile)
 
-	isNorthwestCorner := func(t *tile) bool {
+	isNorthwestCorner := func(r Rotatable) bool {
+		t, _ := r.(*tile)
 		for _, e := range []edge{north, west} {
 			neighbors := edgesForTile[t.edges[e]]
 			if len(neighbors) > 1 {
@@ -322,7 +328,8 @@ func part2(input []*tile) int {
 			}
 		}
 
-		flipTilTest(hit, func(oT *tile) bool {
+		flipTilTest(hit, func(r Rotatable) bool {
+			oT, _ := r.(*tile)
 			return t.edges[e] == oT.edges[oppE]
 		})
 
