@@ -228,6 +228,46 @@ func flipTilTest(t *tile, test func(*tile) bool) {
 	}
 }
 
+func validateTileSet(img map[image.Point]*tile) bool {
+	type neighborCheck struct {
+		v    image.Point
+		oppE edge
+	}
+
+	neighbors := map[edge]neighborCheck{
+		north: {
+			v:    image.Pt(0, -1),
+			oppE: south,
+		},
+		south: {
+			v:    image.Pt(0, 1),
+			oppE: north,
+		},
+		east: {
+			v:    image.Pt(1, 0),
+			oppE: west,
+		},
+		west: {
+			v:    image.Pt(-1, 0),
+			oppE: east,
+		},
+	}
+
+	for pt, tile := range img {
+		for e, n := range neighbors {
+			nPt := pt.Add(n.v)
+			nTile, ok := img[nPt]
+			if !ok {
+				continue
+			}
+			if nTile.edges[n.oppE] != tile.edges[e] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func part2(input []*tile) int {
 	edgesForTile := mapEdgesToTile(input)
 
@@ -304,6 +344,10 @@ func part2(input []*tile) int {
 				q = append(q, pt)
 			}
 		}
+	}
+
+	if !validateTileSet(tileSet) {
+		panic(errors.New("image is invalid"))
 	}
 
 	return 0
