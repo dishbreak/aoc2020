@@ -77,7 +77,7 @@ func toTile(input []string) *tile {
 	id, _ := strconv.Atoi(strings.Trim(parts[1], ":"))
 	result.id = id
 	result.raw = input[1:]
-	result.img = lib.NewMatrix(result.raw)
+	result.img = lib.NewMatrixWithoutFrame(result.raw)
 
 	for lineNo := 1; lineNo < len(input); lineNo++ {
 		line := input[lineNo]
@@ -314,6 +314,35 @@ func knit(tileSet map[image.Point]*tile) *lib.Matrix {
 	return m
 }
 
+/*
+11111111110000000000
+98765432109876543210
+                  #*
+#    ##    ##    ###
+ #  #  #  #  #  #
+*/
+func findMonsters(m *lib.Matrix) int {
+	points := []image.Point{
+		image.Pt(-19, 1),
+		image.Pt(-18, 2),
+		image.Pt(-1, 0),
+		image.Pt(0, 1),
+		image.Pt(-1, 1),
+		image.Pt(-2, 1),
+		image.Pt(-7, 1),
+		image.Pt(-8, 1),
+		image.Pt(-13, 1),
+		image.Pt(-14, 1),
+		image.Pt(-3, 2),
+		image.Pt(-6, 2),
+		image.Pt(-9, 2),
+		image.Pt(-12, 2),
+		image.Pt(-15, 2),
+	}
+
+	return m.Convolve(points) * len(points)
+}
+
 func part2(input []*tile) int {
 	edgesForTile := mapEdgesToTile(input)
 
@@ -399,9 +428,20 @@ func part2(input []*tile) int {
 	}
 
 	fullImg := knit(tileSet)
-	if fullImg.GetDim() == 0 {
-		panic(errors.New("empty matrix"))
+
+	monsterTiles := 0
+
+	monstersFound := func(r Rotatable) bool {
+		if monsterTiles > 0 {
+			return true
+		}
+
+		m, _ := r.(*lib.Matrix)
+		monsterTiles = findMonsters(m)
+		return monsterTiles > 0
 	}
 
-	return 0
+	flipTilTest(fullImg, monstersFound)
+
+	return fullImg.Count('#') - monsterTiles
 }

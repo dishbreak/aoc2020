@@ -103,6 +103,54 @@ func (m *Matrix) FlipVertical() {
 	}
 }
 
+func (m *Matrix) Count(b byte) int {
+	acc := 0
+	for y := 0; y < len(m.d); y++ {
+		for x := 0; x < len(m.d[y]); x++ {
+			if m.d[y][x] == b {
+				acc++
+			}
+		}
+	}
+	return acc
+}
+
+func (m *Matrix) Convolve(points []image.Point) int {
+	xMin, yMax := 1, -1
+	for _, pt := range points {
+		if xMin > pt.X {
+			xMin = pt.X
+		}
+		if yMax < pt.Y {
+			yMax = pt.Y
+		}
+	}
+
+	xStart := 0 - xMin
+	yEnd := m.n - yMax
+
+	isHit := func(x, y int) bool {
+		for _, pt := range points {
+			if m.d[y+pt.Y][x+pt.X] != '#' {
+				return false
+			}
+		}
+		return true
+	}
+
+	acc := 0
+	for y := 0; y < yEnd; y++ {
+		for x := xStart; x < len(m.d[y]); x++ {
+			if isHit(x, y) {
+				acc++
+			}
+		}
+	}
+
+	return acc
+
+}
+
 func (m *Matrix) String() string {
 	b := strings.Builder{}
 	for _, row := range m.d {

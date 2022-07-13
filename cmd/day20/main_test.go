@@ -131,7 +131,8 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	assert.Equal(t, 0, part2(input))
+	d := getTestData()
+	assert.Equal(t, 273, part2(d))
 }
 
 func TestToTile(t *testing.T) {
